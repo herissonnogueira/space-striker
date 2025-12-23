@@ -162,6 +162,12 @@ const enemies = [];
 let spawnTimer = 0;
 const spawnInterval = 100;
 
+// Sistema de jogo
+let score = 0;
+let lives = 3;
+let invulnerable = false;
+let invulnerableTimer = 0;
+
 // Função para detectar colisão entre retângulos
 function checkCollision(obj1, obj2) {
     return obj1.x < obj2.x + obj2.width &&
@@ -254,14 +260,44 @@ function gameLoop() {
             if (checkCollision(bulletBox, enemies[i])) {
                 enemies.splice(i, 1);
                 bullets.splice(j, 1);
+                score += 10;
                 break;
             }
+        }
+
+        // Verificar colisão com jogador
+        if (enemies[i] && !invulnerable && checkCollision(player, enemies[i])) {
+            enemies.splice(i, 1);
+            lives--;
+            invulnerable = true;
+            invulnerableTimer = 120;
         }
 
         // Remover inimigos que saíram da tela
         if (enemies[i] && enemies[i].isOffScreen()) {
             enemies.splice(i, 1);
         }
+    }
+
+    // Gerenciar invulnerabilidade
+    if (invulnerable) {
+        invulnerableTimer--;
+        if (invulnerableTimer <= 0) {
+            invulnerable = false;
+        }
+    }
+
+    // Desenhar UI
+    ctx.fillStyle = '#00ffff';
+    ctx.font = '20px Arial';
+    ctx.fillText(`Score: ${score}`, 20, 30);
+    ctx.fillText(`Lives: ${lives}`, 20, 60);
+
+    // Piscar nave quando invulnerável
+    if (invulnerable && Math.floor(invulnerableTimer / 10) % 2 === 0) {
+        ctx.globalAlpha = 0.5;
+    } else {
+        ctx.globalAlpha = 1;
     }
 
     requestAnimationFrame(gameLoop);
