@@ -41,6 +41,39 @@ for (let i = 0; i < 100; i++) {
     stars.push(new Star());
 }
 
+// Classe de partícula para explosões
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 4;
+        this.vy = (Math.random() - 0.5) * 4;
+        this.size = Math.random() * 3 + 1;
+        this.color = color;
+        this.life = 30;
+        this.maxLife = 30;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.life--;
+    }
+
+    draw() {
+        const alpha = this.life / this.maxLife;
+        ctx.fillStyle = this.color.replace(')', `, ${alpha})`).replace('rgb', 'rgba');
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+    }
+
+    isDead() {
+        return this.life <= 0;
+    }
+}
+
+// Array de partículas
+const particles = [];
+
 // Classe do jogador
 class Player {
     constructor() {
@@ -169,6 +202,7 @@ let invulnerable = false;
 let invulnerableTimer = 0;
 let gameOver = false;
 let level = 1;
+let highScore = localStorage.getItem('spaceStrikerHighScore') || 0;
 
 // Função para detectar colisão entre retângulos
 function checkCollision(obj1, obj2) {
@@ -176,6 +210,13 @@ function checkCollision(obj1, obj2) {
            obj1.x + obj1.width > obj2.x &&
            obj1.y < obj2.y + obj2.height &&
            obj1.y + obj1.height > obj2.y;
+}
+
+// Função para criar explosão
+function createExplosion(x, y, color) {
+    for (let i = 0; i < 8; i++) {
+        particles.push(new Particle(x, y, color));
+    }
 }
 
 // Função para resetar o jogo
@@ -188,6 +229,7 @@ function resetGame() {
     level = 1;
     bullets.length = 0;
     enemies.length = 0;
+    particles.length = 0;
     player.x = canvas.width / 2 - player.width / 2;
     player.y = canvas.height - player.height - 20;
 }
@@ -242,6 +284,10 @@ function gameLoop() {
     // Verificar game over
     if (lives <= 0 && !gameOver) {
         gameOver = true;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('spaceStrikerHighScore', highScore);
+        }
     }
 
     if (gameOver) {
@@ -282,6 +328,16 @@ function gameLoop() {
         }
     }
 
+    // Atualizar e desenhar partículas
+    for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+
+        if (particles[i].isDead()) {
+            particles.splice(i, 1);
+        }
+    }
+
     // Calcular nível baseado no score
     level = Math.floor(score / 100) + 1;
 
@@ -312,6 +368,7 @@ function gameLoop() {
             };
 
             if (checkCollision(bulletBox, enemies[i])) {
+                createExplosion(enemies[i].x + enemies[i].width / 2, enemies[i].y + enemies[i].height / 2, 'rgb(255, 68, 68)');
                 enemies.splice(i, 1);
                 bullets.splice(j, 1);
                 score += 10;
@@ -343,10 +400,16 @@ function gameLoop() {
 
     // Desenhar UI
     ctx.fillStyle = '#00ffff';
-    ctx.font = '20px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.fillText(`Score: ${score}`, 20, 30);
     ctx.fillText(`Lives: ${lives}`, 20, 60);
     ctx.fillText(`Level: ${level}`, 20, 90);
+
+    // High Score no canto direito
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#ffaa00';
+    ctx.fillText(`High Score: ${highScore}`, canvas.width - 20, 30);
+    ctx.textAlign = 'left';
 
     // Piscar nave quando invulnerável
     if (invulnerable && Math.floor(invulnerableTimer / 10) % 2 === 0) {
