@@ -77,10 +77,47 @@ class Player {
         ctx.lineWidth = 2;
         ctx.stroke();
     }
+
+    shoot() {
+        bullets.push(new Bullet(this.x + this.width / 2, this.y));
+    }
+}
+
+// Classe de projétil
+class Bullet {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.width = 4;
+        this.height = 15;
+        this.speed = 8;
+    }
+
+    update() {
+        this.y -= this.speed;
+    }
+
+    draw() {
+        ctx.fillStyle = '#00ffff';
+        ctx.fillRect(this.x - this.width / 2, this.y, this.width, this.height);
+
+        // Brilho do tiro
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#00ffff';
+        ctx.fillRect(this.x - this.width / 2, this.y, this.width, this.height);
+        ctx.shadowBlur = 0;
+    }
+
+    isOffScreen() {
+        return this.y < 0;
+    }
 }
 
 // Criar jogador
 const player = new Player();
+
+// Array de projéteis
+const bullets = [];
 
 // Controles do teclado
 const keys = {};
@@ -94,6 +131,10 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') {
         player.movingRight = true;
     }
+    if (e.key === ' ' && !keys['shooting']) {
+        keys['shooting'] = true;
+        player.shoot();
+    }
 });
 
 document.addEventListener('keyup', (e) => {
@@ -104,6 +145,9 @@ document.addEventListener('keyup', (e) => {
     }
     if (e.key === 'ArrowRight') {
         player.movingRight = false;
+    }
+    if (e.key === ' ') {
+        keys['shooting'] = false;
     }
 });
 
@@ -122,6 +166,17 @@ function gameLoop() {
     // Atualizar e desenhar jogador
     player.update();
     player.draw();
+
+    // Atualizar e desenhar projéteis
+    for (let i = bullets.length - 1; i >= 0; i--) {
+        bullets[i].update();
+        bullets[i].draw();
+
+        // Remover projéteis que saíram da tela
+        if (bullets[i].isOffScreen()) {
+            bullets.splice(i, 1);
+        }
+    }
 
     requestAnimationFrame(gameLoop);
 }
