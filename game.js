@@ -115,12 +115,12 @@ class Bullet {
 
 // Classe de inimigo
 class Enemy {
-    constructor() {
+    constructor(speedMultiplier = 1) {
         this.width = 35;
         this.height = 35;
         this.x = Math.random() * (canvas.width - this.width);
         this.y = -this.height;
-        this.speed = Math.random() * 2 + 1;
+        this.speed = (Math.random() * 2 + 1) * speedMultiplier;
     }
 
     update() {
@@ -168,6 +168,7 @@ let lives = 3;
 let invulnerable = false;
 let invulnerableTimer = 0;
 let gameOver = false;
+let level = 1;
 
 // Função para detectar colisão entre retângulos
 function checkCollision(obj1, obj2) {
@@ -184,6 +185,7 @@ function resetGame() {
     gameOver = false;
     invulnerable = false;
     invulnerableTimer = 0;
+    level = 1;
     bullets.length = 0;
     enemies.length = 0;
     player.x = canvas.width / 2 - player.width / 2;
@@ -280,10 +282,17 @@ function gameLoop() {
         }
     }
 
+    // Calcular nível baseado no score
+    level = Math.floor(score / 100) + 1;
+
+    // Ajustar dificuldade baseado no nível
+    const currentSpawnInterval = Math.max(40, spawnInterval - (level - 1) * 10);
+    const speedMultiplier = 1 + (level - 1) * 0.15;
+
     // Spawn de inimigos
     spawnTimer++;
-    if (spawnTimer >= spawnInterval) {
-        enemies.push(new Enemy());
+    if (spawnTimer >= currentSpawnInterval) {
+        enemies.push(new Enemy(speedMultiplier));
         spawnTimer = 0;
     }
 
@@ -337,6 +346,7 @@ function gameLoop() {
     ctx.font = '20px Arial';
     ctx.fillText(`Score: ${score}`, 20, 30);
     ctx.fillText(`Lives: ${lives}`, 20, 60);
+    ctx.fillText(`Level: ${level}`, 20, 90);
 
     // Piscar nave quando invulnerável
     if (invulnerable && Math.floor(invulnerableTimer / 10) % 2 === 0) {
