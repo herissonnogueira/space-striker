@@ -167,6 +167,7 @@ let score = 0;
 let lives = 3;
 let invulnerable = false;
 let invulnerableTimer = 0;
+let gameOver = false;
 
 // Função para detectar colisão entre retângulos
 function checkCollision(obj1, obj2) {
@@ -174,6 +175,19 @@ function checkCollision(obj1, obj2) {
            obj1.x + obj1.width > obj2.x &&
            obj1.y < obj2.y + obj2.height &&
            obj1.y + obj1.height > obj2.y;
+}
+
+// Função para resetar o jogo
+function resetGame() {
+    score = 0;
+    lives = 3;
+    gameOver = false;
+    invulnerable = false;
+    invulnerableTimer = 0;
+    bullets.length = 0;
+    enemies.length = 0;
+    player.x = canvas.width / 2 - player.width / 2;
+    player.y = canvas.height - player.height - 20;
 }
 
 // Controles do teclado
@@ -188,9 +202,12 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') {
         player.movingRight = true;
     }
-    if (e.key === ' ' && !keys['shooting']) {
+    if (e.key === ' ' && !keys['shooting'] && !gameOver) {
         keys['shooting'] = true;
         player.shoot();
+    }
+    if ((e.key === 'r' || e.key === 'R' || e.key === 'Enter') && gameOver) {
+        resetGame();
     }
 });
 
@@ -219,6 +236,34 @@ function gameLoop() {
         star.update();
         star.draw();
     });
+
+    // Verificar game over
+    if (lives <= 0 && !gameOver) {
+        gameOver = true;
+    }
+
+    if (gameOver) {
+        // Tela de game over
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#ff4444';
+        ctx.font = 'bold 60px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - 40);
+
+        ctx.fillStyle = '#00ffff';
+        ctx.font = '30px Arial';
+        ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '20px Arial';
+        ctx.fillText('Press R or ENTER to restart', canvas.width / 2, canvas.height / 2 + 80);
+
+        ctx.textAlign = 'left';
+        requestAnimationFrame(gameLoop);
+        return;
+    }
 
     // Atualizar e desenhar jogador
     player.update();
