@@ -113,11 +113,54 @@ class Bullet {
     }
 }
 
+// Classe de inimigo
+class Enemy {
+    constructor() {
+        this.width = 35;
+        this.height = 35;
+        this.x = Math.random() * (canvas.width - this.width);
+        this.y = -this.height;
+        this.speed = Math.random() * 2 + 1;
+    }
+
+    update() {
+        this.y += this.speed;
+    }
+
+    draw() {
+        // Desenhar inimigo (quadrado rotacionado)
+        ctx.save();
+        ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+        ctx.rotate(Math.PI / 4);
+
+        ctx.fillStyle = '#ff4444';
+        ctx.fillRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+        // Brilho do inimigo
+        ctx.strokeStyle = '#ff6666';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-this.width / 2, -this.height / 2, this.width, this.height);
+
+        ctx.restore();
+    }
+
+    isOffScreen() {
+        return this.y > canvas.height;
+    }
+}
+
 // Criar jogador
 const player = new Player();
 
 // Array de projéteis
 const bullets = [];
+
+// Array de inimigos
+const enemies = [];
+
+// Sistema de spawn de inimigos
+let spawnTimer = 0;
+const spawnInterval = 100;
 
 // Controles do teclado
 const keys = {};
@@ -175,6 +218,24 @@ function gameLoop() {
         // Remover projéteis que saíram da tela
         if (bullets[i].isOffScreen()) {
             bullets.splice(i, 1);
+        }
+    }
+
+    // Spawn de inimigos
+    spawnTimer++;
+    if (spawnTimer >= spawnInterval) {
+        enemies.push(new Enemy());
+        spawnTimer = 0;
+    }
+
+    // Atualizar e desenhar inimigos
+    for (let i = enemies.length - 1; i >= 0; i--) {
+        enemies[i].update();
+        enemies[i].draw();
+
+        // Remover inimigos que saíram da tela
+        if (enemies[i].isOffScreen()) {
+            enemies.splice(i, 1);
         }
     }
 
