@@ -162,6 +162,14 @@ const enemies = [];
 let spawnTimer = 0;
 const spawnInterval = 100;
 
+// Função para detectar colisão entre retângulos
+function checkCollision(obj1, obj2) {
+    return obj1.x < obj2.x + obj2.width &&
+           obj1.x + obj1.width > obj2.x &&
+           obj1.y < obj2.y + obj2.height &&
+           obj1.y + obj1.height > obj2.y;
+}
+
 // Controles do teclado
 const keys = {};
 
@@ -233,8 +241,25 @@ function gameLoop() {
         enemies[i].update();
         enemies[i].draw();
 
+        // Verificar colisão com projéteis
+        for (let j = bullets.length - 1; j >= 0; j--) {
+            const bullet = bullets[j];
+            const bulletBox = {
+                x: bullet.x - bullet.width / 2,
+                y: bullet.y,
+                width: bullet.width,
+                height: bullet.height
+            };
+
+            if (checkCollision(bulletBox, enemies[i])) {
+                enemies.splice(i, 1);
+                bullets.splice(j, 1);
+                break;
+            }
+        }
+
         // Remover inimigos que saíram da tela
-        if (enemies[i].isOffScreen()) {
+        if (enemies[i] && enemies[i].isOffScreen()) {
             enemies.splice(i, 1);
         }
     }
